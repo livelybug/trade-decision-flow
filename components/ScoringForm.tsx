@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ScoreData } from '../types';
-import { ArrowLeft, Calculator, AlertCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface Props {
   data: ScoreData;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ScoringForm({ data, onChange, onBack, onNext, isRestricted }: Props) {
-  
+
   const toggle = (key: keyof ScoreData) => {
     onChange({ ...data, [key]: !data[key] });
   };
@@ -22,7 +22,7 @@ export default function ScoringForm({ data, onChange, onBack, onNext, isRestrict
     if (data.btcAligned) score += 10;
     if (data.ethConfirming) score += 5;
     if (data.altStrength) score += 5;
-    
+
     // 2. Structure (0-25)
     if (data.atLiqCluster) score += 10;
     if (data.atSRConfluence) score += 10;
@@ -52,78 +52,76 @@ export default function ScoringForm({ data, onChange, onBack, onNext, isRestrict
   const score = useMemo(() => calculateScore(), [data]);
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
-       
+    <div className="pb-20">
+
        <div className="flex items-center justify-between mb-6">
-            <button onClick={onBack} className="text-slate-400 hover:text-white flex items-center gap-2 text-sm">
+            <button onClick={onBack} className="text-steel hover:text-ink flex items-center gap-2 text-sm font-mono">
                 <ArrowLeft className="w-4 h-4" /> Back to Gates
             </button>
-            <div className="bg-slate-800 px-4 py-2 rounded-full border border-slate-700 flex items-center gap-2">
-                <Calculator className="w-4 h-4 text-blue-400" />
-                <span className="text-slate-400 text-sm">Current Score:</span>
-                <span className={`font-bold text-lg ${score >= 70 ? 'text-green-400' : score < 50 ? 'text-red-400' : 'text-yellow-400'}`}>
+            <div className="bg-paper border border-ink px-4 py-2 rounded-sm flex items-center gap-3">
+                <span className="text-steel text-xs font-mono uppercase tracking-wider">Current Score:</span>
+                <span className={`font-mono font-medium text-lg ${score >= 70 ? 'text-go' : score < 50 ? 'text-stop' : 'text-signal'}`}>
                     {score}
                 </span>
             </div>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <Section title="1. Market Alignment (0-20)">
-                <Checkbox label="BTC major + minor aligned (+10)" checked={data.btcAligned} onChange={() => toggle('btcAligned')} />
-                <Checkbox label="ETH confirms or weaker/stronger (+5)" checked={data.ethConfirming} onChange={() => toggle('ethConfirming')} />
-                <Checkbox label="Alt Relative Strength favors direction (+5)" checked={data.altStrength} onChange={() => toggle('altStrength')} />
+
+            <Section title="1. Market Alignment" range="0–20">
+                <Checkbox label="BTC major + minor aligned" points="+10" checked={data.btcAligned} onChange={() => toggle('btcAligned')} />
+                <Checkbox label="ETH confirms or weaker/stronger" points="+5" checked={data.ethConfirming} onChange={() => toggle('ethConfirming')} />
+                <Checkbox label="Alt Relative Strength favors direction" points="+5" checked={data.altStrength} onChange={() => toggle('altStrength')} />
             </Section>
 
-            <Section title="2. Structure & Location (0-25)">
-                <Checkbox label="At Liquidation Cluster (+10)" checked={data.atLiqCluster} onChange={() => toggle('atLiqCluster')} />
-                <Checkbox label="At S/R Confluence (+10)" checked={data.atSRConfluence} onChange={() => toggle('atSRConfluence')} />
-                <Checkbox label="Wick / False Break confirmed (+5)" checked={data.wickFalseBreak} onChange={() => toggle('wickFalseBreak')} />
+            <Section title="2. Structure & Location" range="0–25">
+                <Checkbox label="At Liquidation Cluster" points="+10" checked={data.atLiqCluster} onChange={() => toggle('atLiqCluster')} />
+                <Checkbox label="At S/R Confluence" points="+10" checked={data.atSRConfluence} onChange={() => toggle('atSRConfluence')} />
+                <Checkbox label="Wick / False Break confirmed" points="+5" checked={data.wickFalseBreak} onChange={() => toggle('wickFalseBreak')} />
             </Section>
 
-            <Section title="3. Derivatives & Flow (0-20)">
-                <Checkbox label="OI diverges from price (+8)" checked={data.oiDivergence} onChange={() => toggle('oiDivergence')} />
-                <Checkbox label="Spot vs Perp Divergence (+6)" checked={data.spotPerpDiv} onChange={() => toggle('spotPerpDiv')} />
-                <Checkbox label="LS Ratio extreme / rounding (+6)" checked={data.lsRatioExtreme} onChange={() => toggle('lsRatioExtreme')} />
+            <Section title="3. Derivatives & Flow" range="0–20">
+                <Checkbox label="OI diverges from price" points="+8" checked={data.oiDivergence} onChange={() => toggle('oiDivergence')} />
+                <Checkbox label="Spot vs Perp Divergence" points="+6" checked={data.spotPerpDiv} onChange={() => toggle('spotPerpDiv')} />
+                <Checkbox label="LS Ratio extreme / rounding" points="+6" checked={data.lsRatioExtreme} onChange={() => toggle('lsRatioExtreme')} />
             </Section>
 
-            <Section title="4. Momentum & Pattern (0-15)">
-                <Checkbox label="Divergence (RSI / MACD) (+8)" checked={data.momentumDiv} onChange={() => toggle('momentumDiv')} />
-                <Checkbox label="Rounding top/bottom / Failed breakout (+7)" checked={data.roundingPattern} onChange={() => toggle('roundingPattern')} />
+            <Section title="4. Momentum & Pattern" range="0–15">
+                <Checkbox label="Divergence (RSI / MACD)" points="+8" checked={data.momentumDiv} onChange={() => toggle('momentumDiv')} />
+                <Checkbox label="Rounding top/bottom / Failed breakout" points="+7" checked={data.roundingPattern} onChange={() => toggle('roundingPattern')} />
             </Section>
 
-            <Section title="5. Timing & Context (0-10)">
-                <Checkbox label="US Open behavior understood (+5)" checked={data.usOpenUnderstood} onChange={() => toggle('usOpenUnderstood')} />
-                <Checkbox label="Weekend / Event risk priced in (+5)" checked={data.eventRiskPriced} onChange={() => toggle('eventRiskPriced')} />
+            <Section title="5. Timing & Context" range="0–10">
+                <Checkbox label="US Open behavior understood" points="+5" checked={data.usOpenUnderstood} onChange={() => toggle('usOpenUnderstood')} />
+                <Checkbox label="Weekend / Event risk priced in" points="+5" checked={data.eventRiskPriced} onChange={() => toggle('eventRiskPriced')} />
             </Section>
 
-            <Section title="6. Psychological State">
-                <Checkbox label="Calm, no urgency (+5)" checked={data.calmState} onChange={() => toggle('calmState')} />
-                <Checkbox label="Clear invalidation defined (+5)" checked={data.invalidationClear} onChange={() => toggle('invalidationClear')} />
-                <div className="pt-2 border-t border-slate-700/50 mt-2">
-                    <Checkbox label="Anxiety / FOMO (-10 Penalty)" checked={data.anxietyFOMO} onChange={() => toggle('anxietyFOMO')} isNegative />
+            <Section title="6. Psychological State" range="±10">
+                <Checkbox label="Calm, no urgency" points="+5" checked={data.calmState} onChange={() => toggle('calmState')} />
+                <Checkbox label="Clear invalidation defined" points="+5" checked={data.invalidationClear} onChange={() => toggle('invalidationClear')} />
+                <div className="mt-2 pt-2 border-t border-steel-light">
+                    <Checkbox label="Anxiety / FOMO" points="-10" checked={data.anxietyFOMO} onChange={() => toggle('anxietyFOMO')} isNegative />
                 </div>
             </Section>
        </div>
 
        {/* Floating Action Bar */}
-       <div className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur border-t border-slate-800 p-4 z-30">
+       <div className="fixed bottom-0 left-0 right-0 bg-paper border-t border-ink p-4 z-30">
             <div className="max-w-4xl mx-auto flex items-center justify-between">
                 <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Total Score</span>
-                    <span className="text-2xl font-bold text-white">{score}/100</span>
+                    <span className="text-xs text-steel font-mono uppercase tracking-wider">Total Score</span>
+                    <span className="text-2xl font-mono font-medium text-ink">{score}/100</span>
                 </div>
-                
+
                 {isRestricted && (
-                     <div className="hidden md:flex items-center gap-2 text-yellow-500 text-sm bg-yellow-900/20 px-3 py-1 rounded">
-                        <AlertCircle className="w-4 h-4" />
-                        Gate 1 Restriction Active (Max 30% Size)
+                     <div className="hidden md:flex items-center gap-2 text-signal text-sm font-mono border border-signal px-3 py-1 rounded-sm">
+                        GATE 1 RESTRICTION ACTIVE (MAX 30% SIZE)
                      </div>
                 )}
 
-                <button 
+                <button
                     onClick={onNext}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-blue-500/20 transition-all"
+                    className="bg-ink text-paper font-medium py-3 px-8 rounded-sm uppercase tracking-wide hover:bg-ink/85"
                 >
                     Generate Plan
                 </button>
@@ -134,34 +132,41 @@ export default function ScoringForm({ data, onChange, onBack, onNext, isRestrict
   );
 }
 
-function Section({ title, children }: { title: string, children?: React.ReactNode }) {
+function Section({ title, range, children }: { title: string, range?: string, children?: React.ReactNode }) {
     return (
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl">
-            <h4 className="text-slate-300 font-semibold mb-4 text-sm uppercase tracking-wide border-b border-slate-800 pb-2">{title}</h4>
-            <div className="space-y-3">
+        <div className="bg-paper border border-ink rounded-sm">
+            <div className="flex items-baseline justify-between px-5 py-3 border-b border-steel-light">
+                <h4 className="text-ink font-medium text-sm uppercase tracking-wide">{title}</h4>
+                {range && <span className="text-steel font-mono text-xs">{range}</span>}
+            </div>
+            <div className="p-3 space-y-1">
                 {children}
             </div>
         </div>
     )
 }
 
-function Checkbox({ label, checked, onChange, isNegative = false }: { label: string, checked: boolean, onChange: () => void, isNegative?: boolean }) {
+function Checkbox({ label, points, checked, onChange, isNegative = false }: { label: string, points?: string, checked: boolean, onChange: () => void, isNegative?: boolean }) {
+    const onClass = isNegative ? 'bg-stop border-stop' : 'bg-signal border-signal';
     return (
-        <label 
+        <label
             onClick={(e) => {
                 e.preventDefault();
                 onChange();
             }}
-            className={`flex items-start gap-3 cursor-pointer group p-2 rounded hover:bg-slate-800/50 transition-colors select-none ${checked && isNegative ? 'bg-red-900/20' : ''} ${checked && !isNegative ? 'bg-blue-900/20' : ''}`}
+            className={`flex items-center gap-3 cursor-pointer px-2 py-2 rounded-sm select-none ${checked ? 'bg-white' : 'hover:bg-white/60'}`}
         >
-            <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors 
-                ${checked 
-                    ? (isNegative ? 'bg-red-500 border-red-500 text-white' : 'bg-blue-500 border-blue-500 text-white') 
-                    : 'border-slate-600 bg-slate-800 group-hover:border-slate-500'
-                }`}>
-                {checked && <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+            <div className={`w-4 h-4 rounded-[2px] border flex items-center justify-center shrink-0
+                ${checked ? `${onClass} text-white` : 'border-steel bg-white'}
+            `}>
+                {checked && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
             </div>
-            <span className={`text-sm ${checked ? 'text-slate-200 font-medium' : 'text-slate-400'}`}>{label}</span>
+            <span className={`flex-1 text-sm ${checked ? 'text-ink' : 'text-steel'}`}>{label}</span>
+            {points && (
+                <span className={`font-mono text-xs ${checked ? (isNegative ? 'text-stop' : 'text-ink') : 'text-steel-light'}`}>
+                    {points}
+                </span>
+            )}
         </label>
     )
 }
