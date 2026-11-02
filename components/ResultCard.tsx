@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { GateData, ScoreData, MonitorState, TrendState, LocationType, Timeframe } from '../types';
-import { AlertOctagon, CheckCircle, RefreshCcw, ScrollText, Play, Activity, Siren, ShieldAlert, BadgeCent } from 'lucide-react';
 import RulesReference from './RulesReference';
 
 interface Props {
@@ -24,7 +23,7 @@ const INITIAL_MONITOR: MonitorState = {
 export default function ResultCard({ gates, scores, isRestricted, onReset }: Props) {
   const [isPositionOpen, setIsPositionOpen] = useState(false);
   const [monitor, setMonitor] = useState<MonitorState>(INITIAL_MONITOR);
-  
+
   // Logic needed for Position Sizing (copied from before for consistency)
   const calculateScore = () => {
     let s = 0;
@@ -76,6 +75,9 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
     color = "orange";
   }
 
+  // Status dot on the readout: green = full size, orange = reduced size
+  const dotClass = color === 'green' ? 'bg-go' : 'bg-signal';
+
   // Execution Mode Logic
   let entryType = "Limit or Market";
   if (gates.location === LocationType.WICK_EXTREME) {
@@ -91,29 +93,37 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
     setMonitor(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const exitCount = 
-    (monitor.structureInvalid ? 1 : 0) + 
-    (monitor.regimeChange ? 1 : 0) + 
-    (monitor.spotFlowFlip ? 1 : 0) + 
+  const exitCount =
+    (monitor.structureInvalid ? 1 : 0) +
+    (monitor.regimeChange ? 1 : 0) +
+    (monitor.spotFlowFlip ? 1 : 0) +
     (monitor.scoreDrop ? 1 : 0);
-  
+
   const isCircuitBroken = monitor.overChecking || monitor.revengeUrge || monitor.stressHigh;
 
   let monitorAction = "HOLD PATIENCE";
-  let monitorColor = "bg-slate-700";
+  let monitorBorder = "border-steel-light";
+  let monitorDot = "bg-steel";
+  let monitorText = "text-ink";
   let monitorDesc = "No action signals yet. Stick to the plan.";
 
   if (isCircuitBroken) {
     monitorAction = "EMERGENCY CLOSE / REDUCE";
-    monitorColor = "bg-red-600 animate-pulse";
+    monitorBorder = "border-stop";
+    monitorDot = "bg-stop";
+    monitorText = "text-stop";
     monitorDesc = "Psychological or process circuit breaker tripped. Protect capital immediately.";
   } else if (exitCount >= 2) {
     monitorAction = "FULL EXIT";
-    monitorColor = "bg-orange-600";
+    monitorBorder = "border-signal";
+    monitorDot = "bg-signal";
+    monitorText = "text-signal";
     monitorDesc = "Two or more invalidation criteria met. The trade premise is broken.";
   } else if (monitor.rrReached) {
     monitorAction = "TAKE PROFIT (50%) & BREAKEVEN";
-    monitorColor = "bg-green-600";
+    monitorBorder = "border-go";
+    monitorDot = "bg-go";
+    monitorText = "text-go";
     monitorDesc = "Secure the bag. Risk is now zero. Let the rest ride.";
   }
 
@@ -121,20 +131,20 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
 
   if (!canTrade) {
      return (
-        <div className="space-y-8 animate-in zoom-in-95 duration-500">
-             <div className="rounded-xl border-2 border-red-500 bg-red-950/20 overflow-hidden shadow-2xl">
-                 <div className="p-6 text-center bg-red-600 text-white">
-                    <h2 className="text-3xl font-black uppercase tracking-widest">{positionSize}</h2>
-                    <div className="mt-2 font-mono opacity-80">SCORE: {score} / 100</div>
+        <div className="space-y-8">
+             <div className="rounded-sm border border-stop bg-paper overflow-hidden">
+                 <div className="p-6 text-center bg-stop text-white">
+                    <h2 className="text-2xl md:text-3xl font-medium uppercase tracking-widest">{positionSize}</h2>
+                    <div className="mt-2 font-mono text-sm opacity-80">SCORE: {score} / 100</div>
                  </div>
-                 <div className="p-8 text-center text-slate-300">
+                 <div className="p-8 text-center text-steel">
                     <p className="mb-4">Score is too low to justify risk.</p>
                     <p>Preserve capital. Wait for a better setup.</p>
                  </div>
              </div>
              <div className="flex justify-center pt-8">
-                <button onClick={onReset} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                    <RefreshCcw className="w-4 h-4" /> Start New Analysis
+                <button onClick={onReset} className="text-steel hover:text-ink font-mono text-sm uppercase tracking-wide">
+                    Start New Analysis
                 </button>
             </div>
         </div>
@@ -142,55 +152,46 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
   }
 
   return (
-    <div className="space-y-8 animate-in zoom-in-95 duration-500 pb-20">
-        
+    <div className="space-y-8 pb-20">
+
         {/* Trade Plan Header / Monitor Status */}
-        <div className={`rounded-xl border-2 overflow-hidden shadow-2xl transition-all duration-500 ${
-            isPositionOpen 
-             ? (isCircuitBroken ? 'border-red-500 bg-red-950/30' : 'border-slate-600 bg-slate-900') 
-             : (color === 'green' ? 'border-green-500 bg-green-950/20' : 
-                color === 'blue' ? 'border-blue-500 bg-blue-950/20' :
-                color === 'yellow' ? 'border-yellow-500 bg-yellow-950/20' :
-                'border-orange-500 bg-orange-950/20')
-        }`}>
+        <div className="rounded-sm border border-ink bg-paper overflow-hidden">
+
             {/* Top Banner */}
             {!isPositionOpen ? (
-                // PLAN MODE BANNER
-                <div className={`p-6 text-center ${
-                    color === 'green' ? 'bg-green-600' : 
-                    color === 'blue' ? 'bg-blue-600' :
-                    color === 'yellow' ? 'bg-yellow-600' :
-                    'bg-orange-600'
-                } text-white`}>
-                    <h2 className="text-3xl font-black uppercase tracking-widest">{positionSize}</h2>
-                    <div className="mt-2 font-mono opacity-80">SCORE: {score} / 100</div>
+                // PLAN MODE BANNER — the readout
+                <div className="p-6 text-center bg-ink text-paper">
+                    <h2 className="text-2xl md:text-3xl font-medium uppercase tracking-widest flex items-center justify-center gap-3">
+                        <span className={`w-2.5 h-2.5 rounded-full ${dotClass}`} aria-hidden="true"></span>
+                        {positionSize}
+                    </h2>
+                    <div className="mt-2 font-mono text-sm opacity-70">SCORE: {score} / 100</div>
                 </div>
             ) : (
                 // MONITOR MODE BANNER (ACTION)
-                <div className={`p-6 text-center ${monitorColor} text-white shadow-inner`}>
-                    <h2 className="text-3xl font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                        {isCircuitBroken && <Siren className="w-8 h-8" />}
+                <div className={`p-6 text-center border-b ${monitorBorder}`}>
+                    <h2 className={`text-2xl md:text-3xl font-medium uppercase tracking-widest flex items-center justify-center gap-3 ${monitorText}`}>
+                        <span className={`w-2.5 h-2.5 rounded-full ${monitorDot}`} aria-hidden="true"></span>
                         {monitorAction}
                     </h2>
-                    <p className="mt-2 font-medium opacity-90">{monitorDesc}</p>
+                    <p className="mt-2 font-mono text-sm text-steel">{monitorDesc}</p>
                 </div>
             )}
 
             {/* Content Body */}
             <div className="p-6 md:p-8">
-                
+
                 {/* 1. EXECUTION DETAILS (Always visible, but smaller in monitor mode) */}
-                <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all ${isPositionOpen ? 'opacity-50 hover:opacity-100 mb-8 border-b border-slate-800 pb-6' : 'mb-8'}`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isPositionOpen ? 'opacity-50 hover:opacity-100 mb-8 border-b border-steel-light pb-6' : 'mb-8'}`}>
                      <div>
-                        <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Execution Mode</h4>
-                        <div className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                            <AlertOctagon className="w-5 h-5 text-blue-400" />
+                        <h4 className="text-steel text-xs font-mono uppercase tracking-wider mb-2">Execution Mode</h4>
+                        <div className="text-lg text-ink">
                             {entryType}
                         </div>
                     </div>
                      <div>
-                        <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">SL Strategy</h4>
-                        <div className="text-lg font-bold text-slate-100">
+                        <h4 className="text-steel text-xs font-mono uppercase tracking-wider mb-2">SL Strategy</h4>
+                        <div className="text-lg text-ink">
                              Beyond Structure & Liquidation
                         </div>
                     </div>
@@ -199,23 +200,22 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
                 {/* 2. MODE SWITCHER */}
                 {!isPositionOpen ? (
                     <div className="space-y-6">
-                        <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
-                             <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Pre-Entry Checklist</h4>
-                             <ul className="list-disc list-inside text-slate-300 space-y-1 text-sm">
+                        <div className="bg-white/60 border border-steel-light rounded-sm p-4">
+                             <h4 className="text-steel text-xs font-mono uppercase tracking-wider mb-2">Pre-Entry Checklist</h4>
+                             <ul className="list-disc list-inside text-steel space-y-1 text-sm">
                                 <li>Is the spread reasonable?</li>
                                 <li>Is the size calculated correctly based on SL distance?</li>
                                 <li>Are you entering at the level planned?</li>
                             </ul>
                         </div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => {
                                 setIsPositionOpen(true);
                                 window.scrollTo(0, 0);
                             }}
-                            className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xl shadow-lg shadow-blue-900/20 flex items-center justify-center gap-3 transition-all transform hover:scale-[1.02]"
+                            className="w-full py-4 bg-ink text-paper rounded-sm font-medium text-xl uppercase tracking-widest hover:bg-ink/85"
                         >
-                            <Play className="w-6 h-6 fill-current" />
                             POSITION OPENED — START MONITOR
                         </button>
 
@@ -225,27 +225,24 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
                     </div>
                 ) : (
                     // 3. MONITOR INTERFACE
-                    <div className="space-y-8 animate-in fade-in duration-500">
-                        
+                    <div className="space-y-8">
+
                         {/* Part IV: Management */}
-                        <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
-                             <h3 className="font-bold text-blue-400 flex items-center gap-2 mb-4">
-                                <BadgeCent className="w-5 h-5" />
+                        <div className="bg-white/50 border border-steel-light rounded-sm p-5">
+                             <h3 className="font-mono font-medium text-sm text-ink uppercase tracking-wide mb-4 pb-2 border-b border-steel-light">
                                 Part IV: Management Checks
                              </h3>
-                             <MonitorCheckbox 
+                             <MonitorCheckbox
                                 checked={monitor.rrReached}
                                 onChange={() => toggleMonitor('rrReached')}
                                 label="R:R ≥ 1:1 OR Critical Zone Reached"
                                 subLabel="Action: TP 50% immediately & Move SL to Breakeven."
-                                activeColor="text-green-400"
                              />
                         </div>
 
                         {/* Part V: Exit Rules */}
-                        <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
-                             <h3 className="font-bold text-orange-400 flex items-center gap-2 mb-4">
-                                <ShieldAlert className="w-5 h-5" />
+                        <div className="bg-white/50 border border-steel-light rounded-sm p-5">
+                             <h3 className="font-mono font-medium text-sm text-ink uppercase tracking-wide mb-4 pb-2 border-b border-steel-light">
                                 Part V: Exit Triggers (2+ = FULL EXIT)
                              </h3>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -255,16 +252,15 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
                                 <MonitorCheckbox checked={monitor.scoreDrop} onChange={() => toggleMonitor('scoreDrop')} label="Score Drops < 50" />
                              </div>
                              {exitCount > 0 && (
-                                <div className="mt-3 text-right text-sm font-mono text-slate-400">
-                                    Current Exit Count: <span className={exitCount >= 2 ? "text-red-500 font-bold" : "text-slate-200"}>{exitCount}/4</span>
+                                <div className="mt-3 text-right text-sm font-mono text-steel">
+                                    Current Exit Count: <span className={exitCount >= 2 ? "text-stop font-medium" : "text-ink"}>{exitCount}/4</span>
                                 </div>
                              )}
                         </div>
 
                          {/* Part VI: Circuit Breakers */}
-                         <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700">
-                             <h3 className="font-bold text-red-400 flex items-center gap-2 mb-4">
-                                <Siren className="w-5 h-5" />
+                         <div className="bg-white/50 border border-steel-light rounded-sm p-5">
+                             <h3 className="font-mono font-medium text-sm text-stop uppercase tracking-wide mb-4 pb-2 border-b border-steel-light">
                                 Part VI: Circuit Breakers (ANY = CLOSE)
                              </h3>
                              <div className="space-y-2">
@@ -281,11 +277,11 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
         </div>
 
         <div className="flex justify-center pt-8 pb-12">
-            <button 
+            <button
                 onClick={onReset}
-                className="flex items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="text-steel hover:text-ink font-mono text-sm uppercase tracking-wide"
             >
-                <RefreshCcw className="w-4 h-4" /> Reset / New Trade
+                Reset / New Trade
             </button>
         </div>
     </div>
@@ -293,44 +289,40 @@ export default function ResultCard({ gates, scores, isRestricted, onReset }: Pro
 }
 
 // Helper Component for Monitor Checkboxes
-function MonitorCheckbox({ 
-    label, 
-    subLabel, 
-    checked, 
-    onChange, 
-    isAlert = false,
-    activeColor
-}: { 
-    label: string, 
-    subLabel?: string, 
-    checked: boolean, 
-    onChange: () => void, 
-    isAlert?: boolean,
-    activeColor?: string
+function MonitorCheckbox({
+    label,
+    subLabel,
+    checked,
+    onChange,
+    isAlert = false
+}: {
+    label: string,
+    subLabel?: string,
+    checked: boolean,
+    onChange: () => void,
+    isAlert?: boolean
 }) {
+    const onClass = isAlert ? 'bg-stop border-stop' : 'bg-signal border-signal';
     return (
-        <label 
+        <label
             onClick={(e) => { e.preventDefault(); onChange(); }}
-            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all select-none
-            ${checked 
-                ? (isAlert ? 'bg-red-900/30 border-red-500' : 'bg-slate-700 border-slate-500') 
-                : 'bg-slate-900 border-slate-800 hover:bg-slate-800'
+            className={`flex items-start gap-3 p-3 rounded-sm border cursor-pointer select-none
+            ${checked
+                ? (isAlert ? 'border-stop bg-white' : 'border-ink bg-white')
+                : 'bg-paper border-steel-light hover:border-steel'
             }`}
         >
-            <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center border transition-colors
-                ${checked
-                    ? (isAlert ? 'bg-red-500 border-red-500 text-white' : 'bg-blue-500 border-blue-500 text-white')
-                    : 'border-slate-600'
-                }
+            <div className={`mt-0.5 w-4 h-4 rounded-[2px] flex items-center justify-center border shrink-0
+                ${checked ? `${onClass} text-white` : 'border-steel bg-white'}
             `}>
-                {checked && <CheckCircle className="w-3.5 h-3.5" />}
+                {checked && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
             </div>
             <div>
-                <div className={`text-sm font-medium ${checked ? (activeColor || 'text-white') : 'text-slate-300'}`}>
+                <div className={`text-sm ${checked ? 'text-ink' : 'text-steel'}`}>
                     {label}
                 </div>
                 {subLabel && checked && (
-                    <div className="text-xs text-slate-300 mt-1 font-mono">
+                    <div className="text-xs text-steel mt-1 font-mono">
                         {subLabel}
                     </div>
                 )}

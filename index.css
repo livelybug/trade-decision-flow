@@ -1,0 +1,35 @@
+/* TradeFlow Protocol — Dieter Rams / Braun industrial theme */
+
+body {
+  background-color: #E4E1DC;
+  /* Engineering-specimen grid on the concrete ground */
+  background-image:
+    linear-gradient(to right, rgba(25, 25, 25, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 25, 25, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+::selection {
+  background: #E96A26;
+  color: #FFFFFF;
+}
+
+:focus-visible {
+  outline: 2px solid #E96A26;
+  outline-offset: 2px;
+}
+
+p, li {
+  text-wrap: pretty;
+}
+
+/* Utilitarian state changes: ~100ms, no flourish */
+button, label, select, a {
+  transition: background-color 100ms linear, border-color 100ms linear, color 100ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button, label, select, a {
+    transition: none;
+  }
+}
